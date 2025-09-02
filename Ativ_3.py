@@ -56,11 +56,11 @@ class ArvoreBinaria:
         if no.esquerda:
             self.visualizar_texto(no.esquerda, nivel + 1)
 
-    def visualizar_graphviz(self):
+    def visualizar_graphviz(self, nome_arquivo='arvore_aleatoria'):
         dot = graphviz.Digraph()
         self._add_nos_ao_dot(self.raiz, dot)
-        dot.render('arvore_Com_Valores_Randomicos', format='png', cleanup=True)
-        print("'arvore_Com_Valores_Randomicos.png'.")
+        dot.render(nome_arquivo, format='png', cleanup=True)
+        print(f"Imagem gerada: {nome_arquivo}.png")
 
     def _add_nos_ao_dot(self, no, dot):
         if no is not None:
@@ -73,15 +73,20 @@ class ArvoreBinaria:
                 self._add_nos_ao_dot(no.direita, dot)
 
 
-valores = [100, 40, 10, 88, 26, 13, 64, 99, 1, 73]
+print("="*40)
+print("ÁRVORE BINÁRIA COM VALORES RANDÔMICOS")
+
+valores_aleatorios = random.sample(range(1, 100), 10)
+print(f"\nValores gerados: {valores_aleatorios}")
+
 arvore = ArvoreBinaria()
-for v in valores:
+for v in valores_aleatorios:
     arvore.inserir(v)
 
-print("Visualização da Árvore (Texto):")
+print("\nVisualização da Árvore (Texto):")
 arvore.visualizar_texto()
 
-arvore.visualizar_graphviz()
+arvore.visualizar_graphviz('arvore_aleatoria')
 
 print("\nTravessia Inorder (Esquerda-Raiz-Direita):")
 print(arvore.inorder())
