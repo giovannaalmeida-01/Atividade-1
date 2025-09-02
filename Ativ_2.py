@@ -1,9 +1,9 @@
 import random
-import graphviz
+from graphviz import Digraph
 
 class Node:
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, valor):
+        self.valor = valor
         self.left = None
         self.right = None
 
@@ -11,161 +11,119 @@ class BinarySearchTree:
     def __init__(self):
         self.root = None
 
-    def insert(self, value):
-        if self.root is None:
-            self.root = Node(value)
-        else:
-            self._insert_recursive(self.root, value)
+    def insert(self, valor):
+        def _insert(root, valor):
+            if not root:
+                return Node(valor)
+            if valor < root.valor:
+                root.left = _insert(root.left, valor)
+            elif valor > root.valor:
+                root.right = _insert(root.right, valor)
+            return root
+        self.root = _insert(self.root, valor)
 
-    def _insert_recursive(self, current_node, value):
-        if value < current_node.value:
-            if current_node.left is None:
-                current_node.left = Node(value)
+    def search(self, valor):
+        def _search(root, valor):
+            if not root:
+                return False
+            if root.valor == valor:
+                return True
+            elif valor < root.valor:
+                return _search(root.left, valor)
             else:
-                self._insert_recursive(current_node.left, value)
-        elif value > current_node.value:
-            if current_node.right is None:
-                current_node.right = Node(value)
+                return _search(root.right, valor)
+        return _search(self.root, valor)
+
+    def delete(self, valor):
+        def _min_value_node(node):
+            current = node
+            while current.left:
+                current = current.left
+            return current
+
+        def _delete(root, valor):
+            if not root:
+                return root
+            if valor < root.valor:
+                root.left = _delete(root.left, valor)
+            elif valor > root.valor:
+                root.right = _delete(root.right, valor)
             else:
-                self._insert_recursive(current_node.right, value)
+                if not root.left:
+                    return root.right
+                elif not root.right:
+                    return root.left
+                temp = _min_value_node(root.right)
+                root.valor = temp.valor
+                root.right = _delete(root.right, temp.valor)
+            return root
 
-
-    def search(self, value):
-        return self._search_recursive(self.root, value)
-
-    def _search_recursive(self, current_node, value):
-        if current_node is None:
-            return False
-        if current_node.value == value:
-            return True
-        elif value < current_node.value:
-            return self._search_recursive(current_node.left, value)
-        else:
-            return self._search_recursive(current_node.right, value)
-
-
-    def delete(self, value):
-        self.root = self._delete_recursive(self.root, value)
-
-    def _delete_recursive(self, current_node, value):
-        if current_node is None:
-            return current_node
-
-        if value < current_node.value:
-            current_node.left = self._delete_recursive(current_node.left, value)
-        elif value > current_node.value:
-            current_node.right = self._delete_recursive(current_node.right, value)
-        else:
-        
-            if current_node.left is None:
-                return current_node.right
-            elif current_node.right is None:
-                return current_node.left
-
-            temp = self._min_value_node(current_node.right)
-            current_node.value = temp.value
-            current_node.right = self._delete_recursive(current_node.right, temp.value)
-        return current_node
-
-    def _min_value_node(self, node):
-        current = node
-        while current.left is not None:
-            current = current.left
-        return current
-
+        self.root = _delete(self.root, valor)
 
     def height(self):
-        return self._height_recursive(self.root)
+        def _height(node):
+            if not node:
+                return -1
+            return 1 + max(_height(node.left), _height(node.right))
+        return _height(self.root)
 
-    def _height_recursive(self, node):
-        if node is None:
-            return -1 
-        left_height = self._height_recursive(node.left)
-        right_height = self._height_recursive(node.right)
-        return 1 + max(left_height, right_height)
+    def depth(self, valor):
+        def _depth(node, valor, current_depth=0):
+            if not node:
+                return -1
+            if valor == node.valor:
+                return current_depth
+            elif valor < node.valor:
+                return _depth(node.left, valor, current_depth + 1)
+            else:
+                return _depth(node.right, valor, current_depth + 1)
+        return _depth(self.root, valor)
 
+    def print_tree(self):
+        def _print_tree(node, level=0, prefix="Root: "):
+            if node:
+                print(" " * (level * 4) + prefix + str(node.valor))
+                if node.left or node.right:
+                    _print_tree(node.left, level + 1, "L--- ")
+                    _print_tree(node.right, level + 1, "R--- ")
+        _print_tree(self.root)
 
-    def depth(self, value):
-        return self._depth_recursive(self.root, value, 0)
-
-    def _depth_recursive(self, current_node, value, current_depth):
-        if current_node is None:
-            return -1 
-        if current_node.value == value:
-            return current_depth
-        elif value < current_node.value:
-            return self._depth_recursive(current_node.left, value, current_depth + 1)
-        else:
-            return self._depth_recursive(current_node.right, value, current_depth + 1)
-
-    def visualize(self, filename="bst", format="png"):
-        dot = graphviz.Digraph(comment='Binary Search Tree')
-        dot.node(name='None', label='None', shape='plaintext')
-        if self.root:
-            self._visualize_recursive(self.root, dot)
-        else:
-            dot.node(str(None), 'Empty Tree')
-        dot.render(filename, format=format, view=False)
-
-    def _visualize_recursive(self, node, dot):
-        if node is not None:
-            dot.node(str(node.value))
+    def visualize(self, filename='arvore_aleatoria_2'):
+        dot = Digraph()
+        def _add_edges(node):
+            if not node:
+                return
+            dot.node(str(node.valor))
             if node.left:
-                dot.edge(str(node.value), str(node.left.value))
-                self._visualize_recursive(node.left, dot)
-            else:
-                dot.node(str(node.value) + 'null_left', 'None', shape='plaintext')
-                dot.edge(str(node.value), str(node.value) + 'null_left')
-
+                dot.node(str(node.left.valor))
+                dot.edge(str(node.valor), str(node.left.valor))
+                _add_edges(node.left)
             if node.right:
-                dot.edge(str(node.value), str(node.right.value))
-                self._visualize_recursive(node.right, dot)
-            else:
-                dot.node(str(node.value) + 'null_right', 'None', shape='plaintext')
-                dot.edge(str(node.value), str(node.value) + 'null_right')
-import graphviz
-import random
+                dot.node(str(node.right.valor))
+                dot.edge(str(node.valor), str(node.right.valor))
+                _add_edges(node.right)
+        _add_edges(self.root)
+        dot.render(filename, view=True, format='png')
 
 if __name__ == "__main__":
-    
-    bst_fixed = BinarySearchTree()
-    fixed_values = [146, 131, 124, 50, 150, 154, 188, 130, 30, 114, 57, 162, 16, 18, 119]
-    print(f"Inserindo valores: {fixed_values}")
-    for val in fixed_values:
-        bst_fixed.insert(val)
-    bst_fixed.visualize("bst_fixed_initial")
-    print("bst_fixed_initial.png")
+    bst = BinarySearchTree()
 
-  
-    search_value = 45
-    print(f"Buscando o valor {search_value}: {bst_fixed.search(search_value)}")
-    search_value = 100
-    print(f"Buscando o valor {search_value}: {bst_fixed.search(search_value)}")
+    numeros = random.sample(range(1, 201), 15)
+    print("Números gerados aleatoriamente:", numeros)
 
+    for n in numeros:
+        bst.insert(n)
 
-    delete_value = 30
-    print(f"Removendo o valor {delete_value}")
-    bst_fixed.delete(delete_value)
-    bst_fixed.visualize("bst_fixed_after_delete")
-    print("bst_fixed_after_delete.png")
+    print("\nÁrvore binária de busca (impressa em texto):")
+    bst.print_tree()
 
-    new_insert_value = 60
-    print(f"Inserindo novo valor: {new_insert_value}")
-    bst_fixed.insert(new_insert_value)
-    bst_fixed.visualize("bst_fixed_after_insert")
-    print("bst_fixed_after_insert.png")
+    print("\nGerando visualização gráfica da árvore...")
+    bst.visualize("arvore_aleatoria_2")
 
-    print(f"Altura da árvore: {bst_fixed.height()}")
-    node_to_check_depth = 45
-    print(f"Profundidade do nó {node_to_check_depth}: {bst_fixed.depth(node_to_check_depth)}")
-    node_to_check_depth = 90
-    print(f"Profundidade do nó {node_to_check_depth}: {bst_fixed.depth(node_to_check_depth)}")
+    print("\nAltura da árvore:", bst.height())
 
-    bst_random = BinarySearchTree()
-    random_values = [random.randint(1, 200) for _ in range(15)]
-    print(f"Inserindo valores aleatórios: {random_values}")
-    for val in random_values:
-        bst_random.insert(val)
-    bst_random.visualize("bst_random_initial")
-    print("bst_random_initial.png")
-    print(f"Altura da árvore aleatória: {bst_random.height()}")
+    valor_profundidade = random.choice(numeros)
+    print(f"Profundidade do nó com valor {valor_profundidade}: {bst.depth(valor_profundidade)}")
+
+    valor_busca = random.randint(1, 200)
+    print(f"\nBusca pelo valor {valor_busca}: {'Encontrado' if bst.search(valor_busca) else 'Não encontrado'}")
